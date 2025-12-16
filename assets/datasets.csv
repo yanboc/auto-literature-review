@@ -1,0 +1,12 @@
+conference,year,hf_name,url
+neurips,2022,DeepNLP/NIPS-2022-Accepted-Papers,https://huggingface.co/datasets/DeepNLP/NIPS-2022-Accepted-Papers
+neurips,2023,DeepNLP/NIPS-2023-Accepted-Papers,"https://huggingface.co/datasets/DeepNLP/NIPS-2023-Accepted-Papers"""
+neurips,2024,DeepNLP/NIPS-2024-Accepted-Papers,https://huggingface.co/datasets/DeepNLP/NIPS-2024-Accepted-Papers
+neurips,2025,ai-conferences/NeurIPS2025,https://huggingface.co/datasets/ai-conferences/NeurIPS2025
+icml,2023,DeepNLP/ICML-2023-Accepted-Papers,https://huggingface.co/datasets/DeepNLP/ICML-2023-Accepted-Papers
+icml,2024,DeepNLP/ICML-2024-Accepted-Papers,https://huggingface.co/datasets/DeepNLP/ICML-2024-Accepted-Papers
+icml,2025,ai-conferences/ICML2025,https://huggingface.co/datasets/ai-conferences/ICML2025
+iclr,2022,DeepNLP/ICLR-2022-Accepted-Papers,https://huggingface.co/datasets/DeepNLP/ICLR-2022-Accepted-Papers
+iclr,2023,DeepNLP/ICLR-2023-Accepted-Papers,https://huggingface.co/datasets/DeepNLP/ICLR-2023-Accepted-Papers
+iclr,2024,DeepNLP/ICLR-2024-Accepted-Papers,https://huggingface.co/datasets/DeepNLP/ICLR-2024-Accepted-Papers
+iclr,2025,ai-conferences/ICLR2025,https://huggingface.co/datasets/ai-conferences/ICLR2025
