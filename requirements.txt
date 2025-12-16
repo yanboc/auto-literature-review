@@ -1,3 +1,4 @@
 datasets
 requests
 openai
+lxml

@@ -4,9 +4,10 @@
 
 大家好🤗我做了一个集成 AI 功能的自动文献综述助手，能够根据几个关键词或参考文献自动生成一份文献清单并自动整理/保存 AI 生成的文献总结。而且更重要的是：你可以自由地往里面加入你需要的功能，因为整个项目的代码非常简单（~200行）。当前版本的主要特性包括：
 
-1. **（获取元数据）** 我们维护了一份从 Hugging Face 上获取的“历届AI会议接收论文清单”。基于这份清单，我们将接收论文的元信息（包括题目、作者、摘要、PDF、关键词）清洗并整理成 JSON 格式，方便后续自定义分析。
-2. **（基于规则的初筛）** 我们基于关键词匹配、摘要的相似度和作者关系网分析等方式对文章进行初筛。另外，我们还
+1. **（获取元数据）** 我们维护了一份从 Hugging Face 上获取的“历届 AI 会议接收论文清单”。基于这份清单，我们将接收论文的元信息（包括题目、作者、摘要、PDF、关键词）清洗并整理成 JSON 格式，方便后续自定义分析。
+2. **（基于规则的初筛）** 我们会基于关键词匹配、摘要的相似度和作者关系网分析等方式对会议文章进行初筛。
 3. **（AI/Agentic 功能）** 对于初筛过后的文章，我们使用 AI 功能会 PDF 全文进行总结（输出为`markdown`格式），并对总结过后的文章进行进一步比对，从而得出一份
+4. **（查询记录）** 在一次完整的文献查询后，我们会将必要的信息储存，以便后续查看或在此基础上继续分析。
 
 ## 安装依赖
 
@@ -16,25 +17,31 @@ pip install -r requirements.txt
 
 ## 使用方法
 
-### 方法 1: 单个 URL 获取数据
+### Step 1. 从🤗下载数据
 
-```python
-from fetch_huggingface import fetch_huggingface_data, save_to_json
+我将论文元数据所在的数据集信息手动保存在 `assets/datasets.csv` 中。如需扩大检索范围，请自行在该文件中加入条目。
 
-# 从 dataset 获取数据
-url = "https://huggingface.co/datasets/DeepNLP/NIPS-2022-Accepted-Papers"
-data = fetch_huggingface_data(url)
-
-# 保存为 JSON 文件
-save_to_json(data, "output.json")
-
-# 或者直接使用 JSON
-import json
-json_str = json.dumps(data, ensure_ascii=False, indent=2)
-print(json_str)
+```bash
+python3 utils/fetch.py
 ```
 
-### 方法 2: 批量获取所有 URLs 的数据
+### Step 1.1 解析源论文信息（可选）
+
+后续相似度计算需要源论文元信息（包括标题、作者、摘要等）。你可以提供论文的 *arXiv* id 或 url 并调用
+
+```bash
+python utils/parse_sources.py --arxiv_id="1706.03762"
+```
+
+来自动解析论文元信息，也可以依据 `utils/parse_sources.py` 中给出的样例模板手动填写。如需批量解析论文，可以在 `utils/parse_sources.py` 中依据下述格式
+
+```json
+[{"arxiv_id":"xxxx.xxxxx"},{"arxiv_id":"xxxx.xxxxx"}]
+```
+
+格式填写多个 `arxiv_id`. 后续程序会自动解析并填入剩余元信息。
+
+### Step 2. 基于传统方法的初筛
 
 ```bash
 # 获取所有 URLs 的数据
