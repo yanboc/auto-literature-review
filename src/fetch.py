@@ -5,19 +5,21 @@ Fetch data from Huggingface
 import json
 import os
 import pandas as pd
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from pathlib import Path
 from datasets import load_dataset
 
 
 def fetch_dataset_data(
     dataset_info: str,
-    to_json: bool = True,
-    json_path: Optional[Path] = None,
+    target_papers: pd.DataFrame,
+    to_csv: bool = True,
+    csv_path: Optional[Path] = None,
     force_reload: bool = False,
 ) -> Dict[str, Any]:
     """
-    Fetch data from Huggingface dataset
+    Fetch data from Huggingface dataset.
+    Clean these datasets and get one list of target papers.
 
     Args:
         dataset_info: a row of dataset info in the csv file
@@ -32,31 +34,43 @@ def fetch_dataset_data(
     conf_name = dataset_info["conference"]
     conf_year = dataset_info["year"]
 
-    if not json_path:
+    if not csv_path:
         root_dir = Path(__file__).parent.parent
-        json_path = Path(root_dir / "data" / f"{conf_name}-{conf_year}.json")
+        csv_path = Path(root_dir / "data" / f"{conf_name}-{conf_year}.csv")
 
-    if not force_reload and json_path.exists():
-        print(f"Loading data from {json_path}. Not fetching from Huggingface.")
-        with open(json_path, "r", encoding="utf-8") as f:
-            data_dict = json.load(f)
-        return data_dict
-    elif force_reload and json_path.exists():
+    if not force_reload and csv_path.exists():
+        print(f"Loading data from {csv_path}. Not fetching from remote.")
+        df = pd.read_csv(csv_path)
+        to_csv = False
+
+    elif force_reload and csv_path.exists():
         print(
-            f"Data already exists in {json_path}. Still reloading since force_reload is set to True."
+            f"Data already exists in {csv_path}. Still reloading since force_reload is set to {force_reload}."
         )
-        os.remove(json_path)
+        os.remove(csv_path)
+        to_csv = True
+
     dataset = load_dataset(dataset_name)["train"]
-    data_dict = dataset.to_dict()
+    df = dataset.to_pandas()
 
-    if to_json:
-        try:
-            with open(json_path, "w", encoding="utf-8") as f:
-                json.dump(data_dict, f, ensure_ascii=False, indent=4)
-        except Exception as e:
-            raise Exception(f"Failed to save JSON file: {str(e)}")
+    if to_csv:
+        df.to_csv(csv_path, index=False)
 
-    return data_dict
+    # Data processing
+    print(f"Processing data from {dataset_name}...")
+    df = df.drop(columns="embedding", errors="ignore")
+    df["conf_info"] = f"{conf_name}-{conf_year}"
+    if conf_name == "icml":
+        df = df.rename(columns={"Download PDF": "pdf"})
+    elif conf_name == "neurips":
+        df = df.rename(columns={"Paper": "pdf"})
+
+    current_conf_df = df[["title", "authors", "abstract", "conf_info"]].reset_index(
+        drop=True
+    )
+    target_papers = pd.concat([target_papers, current_conf_df], ignore_index=True)
+
+    return target_papers
 
 
 if __name__ == "__main__":
@@ -64,5 +78,15 @@ if __name__ == "__main__":
     root_dir = Path(__file__).parent.parent
     dataset_infos = pd.read_csv(root_dir / "assets" / "datasets.csv")
     dataset_infos.columns = dataset_infos.columns.str.strip()
+    target_papers = pd.DataFrame(
+        {
+            "title": [],
+            "authors": [],
+            "abstract": [],
+            "conf_info": [],
+        }
+    ).reset_index(drop=True)
     for _, dataset_info in dataset_infos.iterrows():
-        fetch_dataset_data(dataset_info, to_json=True, json_path=None)
+        target_papers = fetch_dataset_data(dataset_info, target_papers=target_papers)
+
+    target_papers.to_csv(root_dir / "assets" / "target_papers.csv", index=False)

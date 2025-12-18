@@ -1,5 +1,5 @@
 from pathlib import Path
-from dataclasses import dataclass, asdict
+from dataclasses import asdict
 from typing import List
 import time
 import json
@@ -15,14 +15,6 @@ args = parser.parse_args()
 
 ATOM_NAMESPACE = "http://www.w3.org/2005/Atom"
 SOURCE_PAPERS_PATH = Path(__file__).parent.parent / "configs" / "source_papers.json"
-
-
-@dataclass
-class Paper:
-    arxiv_id: str
-    title: str | None = None
-    abstract: str | None = None
-    authors: List[str] | None = None
 
 
 def parse_from_arxiv(arxiv_id: str) -> Paper:

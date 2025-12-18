@@ -4,9 +4,21 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
-import os
 import argparse
 import json
+from pathlib import Path
+
+
+def prepare_target_papers(target_papers_dir: Path) -> Path:
+    """
+    Prepare target papers. Load the entries in the fetched datasets (multiple json files). Clean these data and get one list of target papers.
+
+
+    """
+
+    for file in target_papers_dir.glob("*.pdf"):
+        target_papers.append(file)
+    return target_papers
 
 
 class PaperSimilarity:
@@ -155,8 +167,12 @@ class PaperSimilarity:
 # ================ 使用示例 ================
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="论文相似度计算工具")
-    parser.add_argument("--data", type=str, required=True, help="论文数据文件路径 (CSV/JSON)")
-    parser.add_argument("--mode", type=str, choices=["tfidf", "sbert", "both"], default="both")
+    parser.add_argument(
+        "--data", type=str, required=True, help="论文数据文件路径 (CSV/JSON)"
+    )
+    parser.add_argument(
+        "--mode", type=str, choices=["tfidf", "sbert", "both"], default="both"
+    )
     parser.add_argument("--tfidf_out", type=str, default="tfidf_results.json")
     parser.add_argument("--sbert_out", type=str, default="sbert_results.json")
     parser.add_argument("--top_k", type=int, default=5)
