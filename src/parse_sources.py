@@ -8,6 +8,7 @@ import requests
 from lxml import etree as ET
 
 import argparse
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--arxiv_id", type=str, required=False, default=None)
 args = parser.parse_args()
@@ -15,12 +16,14 @@ args = parser.parse_args()
 ATOM_NAMESPACE = "http://www.w3.org/2005/Atom"
 SOURCE_PAPERS_PATH = Path(__file__).parent.parent / "configs" / "source_papers.json"
 
+
 @dataclass
 class Paper:
     arxiv_id: str
     title: str | None = None
     abstract: str | None = None
     authors: List[str] | None = None
+
 
 def parse_from_arxiv(arxiv_id: str) -> Paper:
     """
@@ -44,7 +47,7 @@ def parse_from_arxiv(arxiv_id: str) -> Paper:
                     abstract = abstract.text.strip()
                 else:
                     abstract = None
-                
+
                 authors = []
                 for author in entry.findall(f"{{{ATOM_NAMESPACE}}}author"):
                     name = author.find(f"{{{ATOM_NAMESPACE}}}name")
@@ -55,17 +58,24 @@ def parse_from_arxiv(arxiv_id: str) -> Paper:
                     arxiv_id=arxiv_id,
                     title=title,
                     abstract=abstract,
-                    authors=authors if authors else None
+                    authors=authors if authors else None,
                 )
             except Exception as e:
-                raise Exception(f"Parsing paper from arXiv API has successed.\
-                    However, failed to parse paper information: {str(e)}")
+                raise Exception(
+                    f"Parsing paper from arXiv API has successed.\
+                    However, failed to parse paper information: {str(e)}"
+                )
         else:
-            raise Exception(f"Parsing paper from arXiv API has failed. \
-                Status code: {response.status_code}. Response: {response.text}")
+            raise Exception(
+                f"Parsing paper from arXiv API has failed. \
+                Status code: {response.status_code}. Response: {response.text}"
+            )
     except Exception as e:
-        raise Exception(f"Unexpected error when parsing paper from arXiv API. \
-            Error message: {str(e)}")
+        raise Exception(
+            f"Unexpected error when parsing paper from arXiv API. \
+            Error message: {str(e)}"
+        )
+
 
 if __name__ == "__main__":
     updated_papers = []
@@ -78,7 +88,7 @@ if __name__ == "__main__":
             papers = json.load(f)
 
         logging.info(f"Parsing {len(papers)} papers from arXiv API...")
-        
+
         for paper in papers:
             arxiv_id = paper.get("arxiv_id")
             if not arxiv_id:
@@ -87,10 +97,9 @@ if __name__ == "__main__":
 
             paper = parse_from_arxiv(arxiv_id)
             updated_papers.append(asdict(paper))
-            time.sleep(1) # c
+            time.sleep(1)  # c
 
     with open(SOURCE_PAPERS_PATH, "w", encoding="utf-8") as f:
         json.dump(updated_papers, f, ensure_ascii=False, indent=4)
 
     logging.info(f"Parsed {len(updated_papers)} papers from arXiv API.")
-

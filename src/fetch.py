@@ -9,20 +9,21 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 from datasets import load_dataset
 
+
 def fetch_dataset_data(
     dataset_info: str,
     to_json: bool = True,
     json_path: Optional[Path] = None,
     force_reload: bool = False,
-    ) -> Dict[str, Any]:
+) -> Dict[str, Any]:
     """
     Fetch data from Huggingface dataset
-    
+
     Args:
         dataset_info: a row of dataset info in the csv file
         to_json: whether to save the data to a json file
         json_path: the path to save the json file
-        
+
     Returns:
         data_dicts: a list of data dictionaries
     """
@@ -41,11 +42,12 @@ def fetch_dataset_data(
             data_dict = json.load(f)
         return data_dict
     elif force_reload and json_path.exists():
-        print(f"Data already exists in {json_path}. Still reloading since force_reload is set to True.")
+        print(
+            f"Data already exists in {json_path}. Still reloading since force_reload is set to True."
+        )
         os.remove(json_path)
     dataset = load_dataset(dataset_name)["train"]
     data_dict = dataset.to_dict()
-
 
     if to_json:
         try:
@@ -55,6 +57,7 @@ def fetch_dataset_data(
             raise Exception(f"Failed to save JSON file: {str(e)}")
 
     return data_dict
+
 
 if __name__ == "__main__":
     print("Fetching dataset data...")

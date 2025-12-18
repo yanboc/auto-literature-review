@@ -1,0 +1,20 @@
+[
+{
+    "arxiv_id": "xxxx.xxxxx",
+    "title": "Template Title",
+    "abstract": "The title, authors, and abstract of the paper are optional. Will be replaced by the title, authors, and abstract from the arXiv API. Leave blank if not available. Please change the current file name to 'source_papers.json' before using.",
+    "authors": [
+        "Authors",
+        "of",
+        "the",
+        "paper"
+    ]
+},
+{
+    "arxiv_id": "xxxx.xxxxx",
+    "title": "It is okay to only provide the arXiv ID."
+},
+{
+    "arxiv_id": "xxxx.xxxxx"
+}
+]
