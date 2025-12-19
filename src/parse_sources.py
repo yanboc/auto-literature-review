@@ -9,10 +9,6 @@ import pandas as pd
 
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--arxiv_id", type=str, required=False, default=None)
-args = parser.parse_args()
-
 ATOM_NAMESPACE = "http://www.w3.org/2005/Atom"
 ROOT_DIR = Path(__file__).parent.parent
 SOURCE_PAPERS_PATH = ROOT_DIR / "configs" / "source_papers.csv"
@@ -72,21 +68,19 @@ def parse_from_arxiv(arxiv_id: str) -> Dict[str, Any]:
 if __name__ == "__main__":
     source_papers = []
 
-    if args.arxiv_id:
-        paper = parse_from_arxiv(args.arxiv_id)
-        source_papers.append(paper)
-    else:
-        papers = pd.read_csv(SOURCE_PAPERS_PATH, dtype={"arxiv_id": str})
-        logging.info(f"Parsing {len(papers)} papers from arXiv API...")
+    papers = pd.read_csv(SOURCE_PAPERS_PATH, dtype={"arxiv_id": str})
+    logging.info(f"Parsing {len(papers)} papers from arXiv API...")
 
-        for index, paper in papers.iterrows():
-            arxiv_id = paper["arxiv_id"]
-            paper_info = parse_from_arxiv(arxiv_id)
-            # 分别赋值每一列，避免类型不匹配问题
-            papers.loc[index, 'title'] = paper_info["title"]
-            papers.loc[index, 'authors'] = "; ".join(paper_info["authors"]) if paper_info["authors"] else ""
-            papers.loc[index, 'abstract'] = paper_info["abstract"]
-            time.sleep(1)  # arXiv policy
+    for index, paper in papers.iterrows():
+        arxiv_id = paper["arxiv_id"]
+        paper_info = parse_from_arxiv(arxiv_id)
+        # 分别赋值每一列，避免类型不匹配问题
+        papers.loc[index, "title"] = paper_info["title"]
+        papers.loc[index, "authors"] = (
+            "; ".join(paper_info["authors"]) if paper_info["authors"] else ""
+        )
+        papers.loc[index, "abstract"] = paper_info["abstract"]
+        time.sleep(1)  # arXiv policy
 
     papers.to_csv(SOURCE_PAPERS_PATH, index=False)
     logging.info(f"Parsed {len(source_papers)} papers from arXiv API.")
