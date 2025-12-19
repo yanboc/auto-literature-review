@@ -1,4 +1,4 @@
-conference,year,hf_name,url
+conf_name,conf_year,hf_name,url
 neurips,2022,DeepNLP/NIPS-2022-Accepted-Papers,https://huggingface.co/datasets/DeepNLP/NIPS-2022-Accepted-Papers
 neurips,2023,DeepNLP/NIPS-2023-Accepted-Papers,"https://huggingface.co/datasets/DeepNLP/NIPS-2023-Accepted-Papers"""
 neurips,2024,DeepNLP/NIPS-2024-Accepted-Papers,https://huggingface.co/datasets/DeepNLP/NIPS-2024-Accepted-Papers

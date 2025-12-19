@@ -2,57 +2,49 @@
 Fetch data from Huggingface
 """
 
-import json
 import os
 import pandas as pd
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from pathlib import Path
 from datasets import load_dataset
 
 
+ROOT_DIR = Path(__file__).parent.parent
+
+
 def fetch_dataset_data(
-    dataset_info: str,
-    target_papers: pd.DataFrame,
-    to_csv: bool = True,
-    csv_path: Optional[Path] = None,
-    force_reload: bool = False,
-) -> Dict[str, Any]:
+    dataset_info: Dict[str, Any], to_csv: bool = True, csv_path: Optional[Path] = None
+) -> pd.DataFrame:
     """
-    Fetch data from Huggingface dataset.
-    Clean these datasets and get one list of target papers.
+    Fetch data from Huggingface dataset or load in existing files.
+    Clean these data and get a collection of target papers (in CSV).
 
     Args:
-        dataset_info: a row of dataset info in the csv file
-        to_json: whether to save the data to a json file
-        json_path: the path to save the json file
+        dataset_info: a row of dataset info in the csv file, in Dict[str].
+        to_csv: whether to save the data
+        csv_path: the path to save the csv file
 
     Returns:
-        data_dicts: a list of data dictionaries
+        current_conf_papers: clean form of target papers
     """
 
     dataset_name = dataset_info["hf_name"]
-    conf_name = dataset_info["conference"]
-    conf_year = dataset_info["year"]
+    conf_name = dataset_info["conf_name"]
+    conf_year = dataset_info["conf_year"]
 
-    if not csv_path:
-        root_dir = Path(__file__).parent.parent
-        csv_path = Path(root_dir / "data" / f"{conf_name}-{conf_year}.csv")
+    if csv_path is None:
+        csv_path = Path(ROOT_DIR / "data" / f"{conf_name}-{conf_year}.csv")
 
-    if not force_reload and csv_path.exists():
+    if csv_path.exists():
         print(f"Loading data from {csv_path}. Not fetching from remote.")
         df = pd.read_csv(csv_path)
         to_csv = False
 
-    elif force_reload and csv_path.exists():
-        print(
-            f"Data already exists in {csv_path}. Still reloading since force_reload is set to {force_reload}."
-        )
-        os.remove(csv_path)
-        to_csv = True
-
+    # Fetch data from Hugging Face
     dataset = load_dataset(dataset_name)["train"]
     df = dataset.to_pandas()
 
+    # Save the fetched data to CSV
     if to_csv:
         df.to_csv(csv_path, index=False)
 
@@ -65,18 +57,17 @@ def fetch_dataset_data(
     elif conf_name == "neurips":
         df = df.rename(columns={"Paper": "pdf"})
 
-    current_conf_df = df[["title", "authors", "abstract", "conf_info"]].reset_index(
+    # Only preserve title, authors, abstract, and conf_info columns
+    current_conf_papers = df[["title", "authors", "abstract", "conf_info"]].reset_index(
         drop=True
     )
-    target_papers = pd.concat([target_papers, current_conf_df], ignore_index=True)
-
-    return target_papers
+    return current_conf_papers
 
 
 if __name__ == "__main__":
+
     print("Fetching dataset data...")
-    root_dir = Path(__file__).parent.parent
-    dataset_infos = pd.read_csv(root_dir / "assets" / "datasets.csv")
+    dataset_infos = pd.read_csv(ROOT_DIR / "assets" / "datasets.csv")
     dataset_infos.columns = dataset_infos.columns.str.strip()
     target_papers = pd.DataFrame(
         {
@@ -87,6 +78,9 @@ if __name__ == "__main__":
         }
     ).reset_index(drop=True)
     for _, dataset_info in dataset_infos.iterrows():
-        target_papers = fetch_dataset_data(dataset_info, target_papers=target_papers)
+        current_conf_papers = fetch_dataset_data(dataset_info.to_dict())
+        target_papers = pd.concat(
+            [target_papers, current_conf_papers], ignore_index=True
+        )
 
-    target_papers.to_csv(root_dir / "assets" / "target_papers.csv", index=False)
+    target_papers.to_csv(ROOT_DIR / "assets" / "target_papers.csv", index=False)

@@ -19,11 +19,13 @@ pip install -r requirements.txt
 
 ### Step 1. 从🤗下载数据
 
-我将论文元数据所在的数据集信息手动保存在 `assets/datasets.csv` 中。如需扩大检索范围，请自行在该文件中加入条目。
+我将论文元数据所在的数据集信息手动保存在 `assets/datasets.csv` 中。如需扩大检索范围，请自行在该文件中加入条目。运行
 
 ```bash
 python3 utils/fetch.py
 ```
+
+后在 `data` 文件夹中会出现类似 `f"{conf_name}-{conf_year}.csv"` 的数据文件以及一个叫 `target_papers.csv` 的汇总，其中包含所有考虑的论文的标题、摘要与作者信息。
 
 ### Step 1.1 解析源论文信息（可选）
 
