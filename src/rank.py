@@ -13,10 +13,16 @@ SCORE_PATH = ROOT_DIR / "data" / "test_target_papers_score.csv"
 
 
 def cal_similarity(
-    source_papers: pd.DataFrame, target_papers: pd.DataFrame, model: SentenceTransformer
+    source_papers: pd.DataFrame,
+    target_papers: pd.DataFrame,
+    model: SentenceTransformer,
+    method: str = "embedding",
 ) -> Dict[str, Any]:
     """
     Calculate the similarity between source papers and target papers.
+
+    args:
+        method: the method to calculate the similarity, choose from "embedding" ...
     """
     source_titles = source_papers["title"].to_list()
     source_abstracts = source_papers["abstract"].to_list()

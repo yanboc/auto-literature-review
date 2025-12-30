@@ -1,18 +1,58 @@
 from pathlib import Path
 from typing import Dict, Any
 import time
-import json
+import os
 import logging
 import requests
 from lxml import etree as ET
 import pandas as pd
 
-import argparse
+from semanticscholar import SemanticScholar
+import arxiv
 
 ATOM_NAMESPACE = "http://www.w3.org/2005/Atom"
 ROOT_DIR = Path(__file__).parent.parent
 SOURCE_PAPERS_PATH = ROOT_DIR / "configs" / "source_papers.csv"
 
+def parse_from_semantic_scholar(
+    key_value: str,
+    key_type: str = "title",
+    limit: int = 10,
+) -> pd.DataFrame:
+    """
+    Parse paper information from Semantic Scholar API given a key type and key value.
+    Output a dictionary of paper information with keys: 'title' (str), 'abstract' (str), and 'authors' (list of str).
+    """
+    retriever = SemanticScholar(api_key=os.getenv("SEMANTIC_SCHOLAR_API_KEY"))
+
+    if key_type == "title":
+        import pdb; pdb.set_trace()
+        paper = retriever.search_paper(key_value, limit=limit)[0]
+        if "ArXiv" in paper["externalIds"].keys():
+            arxiv_id = paper["externalIds"]["ArXiv"]
+        else:
+            arxiv_id = None
+        pub_year = paper["year"]
+        title = paper["title"]
+        abstract = paper["abstract"]
+        authors = [author["name"] for author in paper["authors"]]
+
+        pub_info = paper["publicationVenue"] 
+        if pub_info["type"] == "conference":
+            pub_type = "conf"
+        else:
+            pub_type = "journal"
+        pub_name = pub_info["alternate_names"][0] if pub_info["alternate_names"] else pub_info["name"]
+
+    return {
+        "title": title,
+        "abstract": abstract,
+        "authors": authors,
+        "pub_type": pub_type,
+        "pub_name": pub_name,
+        "pub_year": pub_year,
+        "arxiv_id": arxiv_id,
+    }
 
 def parse_from_arxiv(arxiv_id: str) -> Dict[str, Any]:
     """
@@ -67,6 +107,9 @@ def parse_from_arxiv(arxiv_id: str) -> Dict[str, Any]:
 
 if __name__ == "__main__":
     source_papers = []
+
+    parse_from_semantic_scholar("Feature Purification: How Adversarial Training Performs Robust Deep Learning")
+    import pdb; pdb.set_trace()
 
     papers = pd.read_csv(SOURCE_PAPERS_PATH, dtype={"arxiv_id": str})
     logging.info(f"Parsing {len(papers)} papers from arXiv API...")
