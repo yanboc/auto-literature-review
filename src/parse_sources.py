@@ -6,6 +6,7 @@ import logging
 import requests
 from lxml import etree as ET
 import pandas as pd
+from tqdm import tqdm
 
 from semanticscholar import SemanticScholar
 import arxiv
@@ -14,6 +15,32 @@ ATOM_NAMESPACE = "http://www.w3.org/2005/Atom"
 ROOT_DIR = Path(__file__).parent.parent
 SOURCE_PAPERS_PATH = ROOT_DIR / "configs" / "source_papers.csv"
 
+
+def parse_source_papers():
+    source_papers = []
+    papers = pd.read_csv(SOURCE_PAPERS_PATH, dtype={"arxiv_id": str})
+
+    for index, paper in tqdm(papers.iterrows(), total=len(papers)):
+        if paper["arxiv_id"] is not None:
+            logging.info(f"Parsing paper {index} from arXiv API...")
+            arxiv_id = paper["arxiv_id"] 
+            paper_info = parse_from_arxiv(arxiv_id)
+            # 分别赋值每一列，避免类型不匹配问题
+            papers.loc[index, "title"] = paper_info["title"]
+            papers.loc[index, "authors"] = (
+                "; ".join(paper_info["authors"]) if paper_info["authors"] else ""
+            )
+            papers.loc[index, "abstract"] = paper_info["abstract"]
+            time.sleep(1)  # arXiv policy
+        else:
+            assert paper["title"] is not None 
+            logging.info(f"Target paper's arxiv id is missing. Try to parse paper {index} from Semantic Scholar API instead...")
+            paper_info = parse_from_semantic_scholar(paper["title"])
+
+
+    papers.to_csv(SOURCE_PAPERS_PATH, index=False)
+    logging.info(f"Parsed {len(source_papers)} papers from arXiv API.")
+
 def parse_from_semantic_scholar(
     key_value: str,
     key_type: str = "title",
@@ -21,7 +48,8 @@ def parse_from_semantic_scholar(
 ) -> pd.DataFrame:
     """
     Parse paper information from Semantic Scholar API given a key type and key value.
-    Output a dictionary of paper information with keys: 'title' (str), 'abstract' (str), and 'authors' (list of str).
+    Supported key types: "title" (recommended), "doi", "semantic_scholar_id"
+    Output a Paper object.
     """
     retriever = SemanticScholar(api_key=os.getenv("SEMANTIC_SCHOLAR_API_KEY"))
 
@@ -44,17 +72,12 @@ def parse_from_semantic_scholar(
             pub_type = "journal"
         pub_name = pub_info["alternate_names"][0] if pub_info["alternate_names"] else pub_info["name"]
 
-    return {
+    return pd.DataFrame({
         "title": title,
-        "abstract": abstract,
-        "authors": authors,
-        "pub_type": pub_type,
-        "pub_name": pub_name,
-        "pub_year": pub_year,
-        "arxiv_id": arxiv_id,
-    }
+        "abstract": abstract
+    })
 
-def parse_from_arxiv(arxiv_id: str) -> Dict[str, Any]:
+def parse_from_arxiv(arxiv_id: str) -> pd.DataFrame:
     """
     Parse paper information from arXiv API given an arXiv id.
     Output a dictionary of paper information with keys: 'arxiv_id' (str), 'title' (str), 'abstract' (str), and 'authors' (list of str).
@@ -83,11 +106,10 @@ def parse_from_arxiv(arxiv_id: str) -> Dict[str, Any]:
                     if name is not None:
                         authors.append(name.text)
 
-                return {
+                return pd.DataFrame({
                     "title": title,
-                    "abstract": abstract,
-                    "authors": authors,
-                }
+                    "abstract": abstract
+                })
             except Exception as e:
                 raise Exception(
                     f"Parsing paper from arXiv API has successed.\

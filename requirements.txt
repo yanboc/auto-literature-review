@@ -7,3 +7,6 @@ numpy>=1.24.0
 scikit-learn>=1.2.0
 sentence-transformers>=2.2.0
 tqdm>=4.64.0
+arxiv
+semanticscholar
+pytest>=9.0.0
